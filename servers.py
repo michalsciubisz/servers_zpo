@@ -72,7 +72,15 @@ class Client:
     def __init__(self, server: Server):
         self.server: Server = server
     def get_total_price(self, n_letters: Optional[int]) -> Optional[float]:
-        raise NotImplementedError()
+        try:
+            products_list = self.server.get_all_products(n_letters)
+        except TooManyProductsFoundError:
+            return None
+        if len(products_list) == 0:
+            return None
+        total_price = 0
+        for product in products_list:
+            total_price += product.price
 
 
 class Product:
