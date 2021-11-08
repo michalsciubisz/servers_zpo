@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from typing import Optional
+from typing import Optional, List
+import re #biblioteka do poszukiwania patternu
 
-
+#product skończony najprawdopodobniej
 class Product:
     def __init__(self, name: str, price: float):
         self.name = name
@@ -15,8 +16,28 @@ class Product:
     def __hash__(self):
         return hash((self.name, self.price))
 
+
 class Server:
-    pass
+    n_max_returned_entries: int = 3
+
+    def __init__(self, *kwargs, **args):
+        super().__init__()
+
+    def get_product(self, n_letters: int = 1) -> List[Product]: #rozne indeksy moga odnosic się do tych samych produktow
+        pattern = '^[a-zA-Z]{{n_lettters}}\\d{{2,3}}&'.format(n_letters=n_letters)
+        entries = []
+        for p in self.get_all_products(n_letters):
+            if re.match(pattern, p.name):
+                entries.append(p)
+
+        if len(entries) > Server.n_max_returned_entries:
+            raise TooManyProductsFoundError
+        else:
+            return sorted(entries, key=lambda entry: entry.price)
+
+    #klasa abstrakcyjna modyfikowana w zależności od rodzaju podserwera
+    def get_all_products(self, n_letters: int = 1):
+        return NotImplementedError()
 
 class TooManyProductsFoundError:
     # Reprezentuje wyjątek związany ze znalezieniem zbyt dużej liczby produktów.
