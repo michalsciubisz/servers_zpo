@@ -8,8 +8,11 @@ import re #biblioteka do poszukiwania patternu
 #product skończony najprawdopodobniej
 class Product:
     def __init__(self, name: str, price: float):
-        self.name = name
-        self.price = price
+        if re.fullmatch('[a-zA-Z] + [0-9]+', name):
+            self.name = name
+            self.price = price
+        else:
+            raise ValueError
 
     def __eq__(self, other):
         return self.name == other.name and self.price == other.price
@@ -24,7 +27,7 @@ class Server(ABC): #klasa abstraktcyjna dziedziczy po abstrakcyjnej klasie ABC
     def __init__(self, *kwargs, **args):
         super().__init__()
 
-    def get_product(self, n_letters: int = 1) -> List[Product]: #rozne indeksy moga odnosic się do tych samych produktow
+    def get_entries(self, n_letters: int = 1) -> List[Product]: #rozne indeksy moga odnosic się do tych samych produktow
         pattern = '^[a-zA-Z]{{n_lettters}}\\d{{2,3}}&'.format(n_letters=n_letters)
         entries = []
         for p in self.get_all_products(n_letters):
@@ -72,24 +75,12 @@ class Client:
     def __init__(self, server: Server):
         self.server: Server = server
     def get_total_price(self, n_letters: Optional[int]) -> Optional[float]:
-        raise NotImplementedError()
-
-
-class Product:
-    # TODO: zweryfikowac warunek na nazwe(1 litera/ 1 cyfra) // warunek na unikalna reprezentacje tego samego produktu
-    # FIXME: klasa powinna posiadać metodę inicjalizacyjną przyjmującą argumenty wyrażające nazwę produktu (typu str) i jego cenę (typu float) -- w takiej kolejności -- i ustawiającą atrybuty `name` (typu str) oraz `price` (typu float)
-    products = None
-
-    def __init__(self, name: str, price: float):
-        if re.fullmatch('[a-zA-Z] + [0-9]+', name):
-            self.name = name
-            self.price = price
-            # self.name_char = [i for i in name]
-        else:
-            raise ValueError
-
-    def __eq__(self, other):
-        return self.price == other.price and self.name == other.name  # FIXME: zwróć odpowiednią wartość
-
-    def __hash__(self):
-        return hash((self.name, self.price))
+        try:
+            products_list = self.server.get_all_products(n_letters)
+        except TooManyProductsFoundError:
+            return None
+        if len(products_list) == 0:
+            return None
+        total_price = 0
+        for product in products_list:
+            total_price += product.price
