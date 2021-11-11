@@ -39,7 +39,6 @@ class Server(ABC): #klasa abstraktcyjna dziedziczy po abstrakcyjnej klasie ABC
         else:
             return sorted(entries, key=lambda entry: entry.price)
 
-
 class TooManyProductsFoundError(Exception):
     # Reprezentuje wyjątek związany ze znalezieniem zbyt dużej liczby produktów.
     def __str__(self):

@@ -8,36 +8,35 @@ class Product {
 }
 
 abstract class Server {
-+ get_entries(self, n_letters):
-+ get_all_products(n_letters: int): ​
++ n_max_returned_entries: int
++ __init__(self, *args, **kwargs):
++ get_entries(self, n_letters: int = 1):
+# get_all_products(self, n_letters: int = 1): ​
 }
 
 class Client {
 + __init__(self, server: Server)
-+ server: Server
-+ get_entries(self, n_letters):
 + get_total_price(self, n_letters: Optional[int]): Optional[float]
 }
 
 class TooManyProductsFoundError {
-
+- __str__(self):
 }
 
 class MapServer {
-+ __init__(self):
-+ get_all_products(n_letters: int = 1): Dict
-+ get_entries(self, n_letters):
++ __init__(self, products: List[Product]):
+# get_all_products(n_letters: int = 1):
 }
 
 class ListServer {
-+ __init__(self):
-+ get_entries(self, n_letters):
-+ get_all_products(n_letters: int = 1): List
++ __init__(self, products: List[Product]):
+# get_all_products(n_letters: int = 1):
 }
 
 TooManyProductsFoundError <.. Server : <<throws>>
-Server o-- Client
+Client o-- Server
 Server <|-- MapServer
 Server <|-- ListServer
-Server "1" *-- "*" Product
+MapServer "1" *-- "*" Product
+ListServer "1" *-- "*" Product
 @enduml

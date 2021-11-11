@@ -8,8 +8,9 @@ class Product {
 }
 
 abstract class Server {
++ __init__(self, *args, **kwargs):
 + get_entries(self, n_letters):
-+ get_all_products(n_letters: int): ​
+# get_all_products(n_letters: int): ​
 }
 
 class Client {
@@ -25,14 +26,14 @@ class TooManyProductsFoundError {
 
 class MapServer {
 + __init__(self):
-+ get_all_products(n_letters: int = 1): Dict
+# get_all_products(n_letters: int = 1): Dict
 + get_entries(self, n_letters):
 }
 
 class ListServer {
 + __init__(self):
 + get_entries(self, n_letters):
-+ get_all_products(n_letters: int = 1): List
+# get_all_products(n_letters: int = 1): List
 }
 
 TooManyProductsFoundError <.. Server : <<throws>>
