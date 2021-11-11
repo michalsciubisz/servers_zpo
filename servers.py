@@ -34,10 +34,7 @@ class Server(ABC): #klasa abstraktcyjna dziedziczy po abstrakcyjnej klasie ABC
 
     def get_entries(self, n_letters: int = 1) -> List[Product]: #rozne indeksy moga odnosic się do tych samych produktow
         entries = self.get_all_products(n_letters)
-        if len(entries) > Server.n_max_returned_entries:
-            raise TooManyProductsFoundError
-        else:
-            return sorted(entries, key=lambda entry: entry.price)
+        return sorted(entries, key=lambda entry: entry.price)
 
 class TooManyProductsFoundError(Exception):
     # Reprezentuje wyjątek związany ze znalezieniem zbyt dużej liczby produktów.
@@ -63,7 +60,10 @@ class ListServer(Server):
             pattern = re.fullmatch('^[a-zA-Z]{{{n}}}\\d{{2,3}}$'.format(n=n_letters), product.name)
             if pattern:
                 entries.append(product)
-        return entries
+        if len(entries) > Server.n_max_returned_entries:
+            raise TooManyProductsFoundError
+        else:
+            return entries
 
 
 class MapServer(Server):
@@ -77,7 +77,11 @@ class MapServer(Server):
             pattern = re.fullmatch('^[a-zA-Z]{{{n}}}\\d{{2,3}}$'.format(n=n_letters), product)
             if pattern:
                 entries.append(self.products[product])
-        return entries
+        if len(entries) > Server.n_max_returned_entries:
+            raise TooManyProductsFoundError
+        else:
+            return entries
+
 
 class Client:
     def __init__(self, server: Server):
@@ -87,6 +91,8 @@ class Client:
         try:
             products_list = self.server.get_all_products(n_letters)
         except TooManyProductsFoundError:
+            return None
+        if not products_list:
             return None
         total_price = 0
         for product in products_list:
