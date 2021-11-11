@@ -8,7 +8,7 @@ import re #biblioteka do poszukiwania patternu
 #product skończony najprawdopodobniej
 class Product:
     def __init__(self, name: str, price: float):
-        if re.fullmatch('[a-zA-Z] + [0-9]+', name):
+        if re.fullmatch('[a-zA-Z]+[0-9]+', name):
             self.name = name
             self.price = price
         else:
@@ -24,28 +24,26 @@ class Product:
 class Server(ABC): #klasa abstraktcyjna dziedziczy po abstrakcyjnej klasie ABC
     n_max_returned_entries: int = 3
 
-    def __init__(self, *kwargs, **args):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    # klasa abstrakcyjna modyfikowana w zależności od rodzaju podserwera
+    @abstractmethod
+    def get_all_products(self, n_letters: int = 1):
+        raise NotImplementedError()
 
     def get_entries(self, n_letters: int = 1) -> List[Product]: #rozne indeksy moga odnosic się do tych samych produktow
-        pattern = '^[a-zA-Z]{{n_lettters}}\\d{{2,3}}&'.format(n_letters=n_letters)
-        entries = []
-        for p in self.get_all_products(n_letters):
-            if re.match(pattern, p.name):
-                entries.append(p)
-
+        entries = self.get_all_products(n_letters)
         if len(entries) > Server.n_max_returned_entries:
             raise TooManyProductsFoundError
         else:
             return sorted(entries, key=lambda entry: entry.price)
 
-    #klasa abstrakcyjna modyfikowana w zależności od rodzaju podserwera
-    def get_all_products(self, n_letters: int = 1):
-        return NotImplementedError()
 
 class TooManyProductsFoundError(Exception):
     # Reprezentuje wyjątek związany ze znalezieniem zbyt dużej liczby produktów.
-    pass
+    def __str__(self):
+        return 'Znaleziono zbyt wiele produktów'
 
 
 # FIXME: Każda z poniższych klas serwerów powinna posiadać:
@@ -55,32 +53,43 @@ class TooManyProductsFoundError(Exception):
 
 
 #dwie funkcje do uzupełnienia
-class ListServer:
-    def __init__(self):
-        pass
+class ListServer(Server):
+    def __init__(self, products: List[Product]):
+        super().__init__()
+        self.products = products
 
-    def get_all_products(self, n_letters: int = 1):
-        pass
+    def get_all_products(self, n_letters: int = 1) -> List[Product]:
+        entries = []
+        for product in self.products:
+            pattern = re.fullmatch('^[a-zA-Z]{{{n}}}\\d{{2,3}}$'.format(n=n_letters), product.name)
+            if pattern:
+                entries.append(product)
+        return entries
 
 
-class MapServer:
-    def __init__(self):
-        pass
+class MapServer(Server):
+    def __init__(self, products: List[Product]):
+        super().__init__()
+        self.products = {product.name: product for product in products}
 
-    def get_all_products(self, n_letters: int = 1):
-        pass
-
+    def get_all_products(self, n_letters: int = 1) -> List[Product]:
+        entries = []
+        for product in self.products:
+            pattern = re.fullmatch('^[a-zA-Z]{{{n}}}\\d{{2,3}}$'.format(n=n_letters), product)
+            if pattern:
+                entries.append(self.products[product])
+        return entries
 
 class Client:
     def __init__(self, server: Server):
         self.server: Server = server
+
     def get_total_price(self, n_letters: Optional[int]) -> Optional[float]:
         try:
             products_list = self.server.get_all_products(n_letters)
         except TooManyProductsFoundError:
             return None
-        if len(products_list) == 0:
-            return None
         total_price = 0
         for product in products_list:
             total_price += product.price
+        return total_price
